@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Never miss a renewal{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="eyebrow">Personal document tracking</span>
+                <h1 class="hero-title">Never miss a <span class="serif-accent">renewal</span>.</h1>
+                <p class="hero-sub">
+                    Keep your important documents organized, track expiry dates,
+                    and stay ahead of renewals — insurance, licenses, passports and more.
+                </p>
+                <div class="d-flex gap-2 flex-wrap mb-3">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                    {% else %}
+                        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Get Started</a>
+                    {% endif %}
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'login' %}" class="btn btn-light btn-lg">Login</a>
+                    {% endif %}
+                </div>
+                <p class="hero-note mb-0">Licenses · Passports · Insurance · Certificates — every expiry date in one place.</p>
+            </div>
+            <div class="col-lg-5">
+                <!-- A small illustration of the dashboard (static preview) -->
+                <div class="hero-card">
+                    <div class="hero-card-title">Your dashboard at a glance</div>
+                    <div class="hero-row">
+                        <span class="hero-doc-icon"><i class="bi bi-airplane"></i></span>
+                        <div class="flex-grow-1">
+                            <div class="doc-name">Passport</div>
+                            <div class="doc-due">Expires in 7 days</div>
+                        </div>
+                        <span class="status-pill status-expiring">Soon</span>
+                    </div>
+                    <div class="hero-row">
+                        <span class="hero-doc-icon"><i class="bi bi-card-checklist"></i></span>
+                        <div class="flex-grow-1">
+                            <div class="doc-name">Driving License</div>
+                            <div class="doc-due">Expired 3 days ago</div>
+                        </div>
+                        <span class="status-pill status-expired">Expired</span>
+                    </div>
+                    <div class="hero-row">
+                        <span class="hero-doc-icon"><i class="bi bi-heart-pulse"></i></span>
+                        <div class="flex-grow-1">
+                            <div class="doc-name">Health Insurance</div>
+                            <div class="doc-due">Expires in 8 months</div>
+                        </div>
+                        <span class="status-pill status-valid">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features-band">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">Why RenewMate</span>
+            <h2>Everything you need to stay ahead</h2>
+            <p>RenewMate keeps every important date in one place and shows you exactly what needs attention.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card">
+                    <div class="card-body">
+                        <span class="feature-icon"><i class="bi bi-calendar-event"></i></span>
+                        <h3>Track Expiry Dates</h3>
+                        <p>Store expiry dates for licenses, IDs, passports and more in one list.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card">
+                    <div class="card-body">
+                        <span class="feature-icon"><i class="bi bi-lightning-charge"></i></span>
+                        <h3>Smart Status</h3>
+                        <p>Every document is shown as active, expiring soon or expired — automatically.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card">
+                    <div class="card-body">
+                        <span class="feature-icon"><i class="bi bi-clock-history"></i></span>
+                        <h3>Renewal History</h3>
+                        <p>Record each renewal and keep the full history of every document.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card">
+                    <div class="card-body">
+                        <span class="feature-icon"><i class="bi bi-cloud-arrow-up"></i></span>
+                        <h3>Document Storage</h3>
+                        <p>Upload a scan or photo of each document and open it anytime.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card">
+                    <div class="card-body">
+                        <span class="feature-icon"><i class="bi bi-bell"></i></span>
+                        <h3>Timely Reminders</h3>
+                        <p>A reminder report flags everything that needs action this month.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card">
+                    <div class="card-body">
+                        <span class="feature-icon"><i class="bi bi-search"></i></span>
+                        <h3>Search &amp; Filter</h3>
+                        <p>Find any document in seconds with search, type and status filters.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="steps-band">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">How it works</span>
+            <h2>Ready in three simple steps</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <span class="step-number">1</span>
+                <h3 class="step-title">Create your account</h3>
+                <p class="step-text">Sign up free — no setup, no card, no hassle.</p>
+            </div>
+            <div class="col-md-4">
+                <span class="step-number">2</span>
+                <h3 class="step-title">Add your documents</h3>
+                <p class="step-text">Enter each document once, with its expiry date.</p>
+            </div>
+            <div class="col-md-4">
+                <span class="step-number">3</span>
+                <h3 class="step-title">Renew on time</h3>
+                <p class="step-text">RenewMate shows what is due, so nothing lapses.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-5">
+    <div class="container">
+        <div class="cta-band">
+            <h2>Ready to stop worrying about expiry dates?</h2>
+            <p>Create a free account and add your first document in under a minute.</p>
+            <a href="{% url 'register' %}" class="btn btn-cta btn-lg">Get Started</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

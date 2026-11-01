@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Groups{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Documents</span>
+        <h1 class="page-title">Groups</h1>
+        <p class="page-sub">Your own folders for related documents — e.g. Car Documents.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">All Documents</a>
+        <a href="{% url 'group_create' %}" class="btn btn-primary">
+            <i class="bi bi-folder-plus me-1"></i>New Group
+        </a>
+    </div>
+</div>
+
+{% if groups %}
+<div class="row g-4">
+    {% for group in groups %}
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card document-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <span class="doc-kind-icon"><i class="bi bi-folder"></i></span>
+                    <span class="group-count-pill">
+                        {{ group.document_count }} document{{ group.document_count|pluralize }}
+                    </span>
+                </div>
+                <h2 class="doc-name">{{ group.name }}</h2>
+                <p class="kind-line">Group</p>
+            </div>
+            <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <a href="{% url 'group_detail' group.pk %}" class="details-link">
+                    View documents <i class="bi bi-arrow-right"></i>
+                </a>
+                <span class="d-flex gap-2">
+                    <a href="{% url 'group_update' group.pk %}" class="btn btn-sm btn-outline-secondary">Rename</a>
+                    <a href="{% url 'group_delete' group.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-box">
+    <i class="bi bi-folder"></i>
+    <p class="mt-2 mb-3">
+        You have no groups yet. Create one to keep related documents together.
+    </p>
+    <a href="{% url 'group_create' %}" class="btn btn-primary">
+        <i class="bi bi-folder-plus me-1"></i>New Group
+    </a>
+</div>
+{% endif %}
+{% endblock %}

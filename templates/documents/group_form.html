@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_new %}New Group{% else %}Rename {{ group.name }}{% endif %}{% endblock %}
+
+{% block content %}
+<a href="{% url 'group_list' %}"
+   class="mini-link d-inline-flex align-items-center gap-1 mb-3 text-decoration-none">
+    <i class="bi bi-arrow-left"></i> Back to Groups
+</a>
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1">
+                    {% if is_new %}Create a group{% else %}Rename group{% endif %}
+                </h1>
+                <p class="text-muted mb-4">
+                    {% if is_new %}
+                        The name is completely up to you — e.g. "Car Documents",
+                        "Bike Documents" or "Personal Documents".
+                    {% else %}
+                        Renaming a group keeps its documents exactly where they are.
+                    {% endif %}
+                </p>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            {% if is_new %}Create Group{% else %}Save Changes{% endif %}
+                        </button>
+                        <a href="{% url 'group_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

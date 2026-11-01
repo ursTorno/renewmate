@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_new %}Add Document{% else %}Edit {{ document.title }}{% endif %}{% endblock %}
+
+{% block content %}
+{% if is_new %}
+<a href="{% url 'document_list' %}"
+   class="mini-link d-inline-flex align-items-center gap-1 mb-3 text-decoration-none">
+    <i class="bi bi-arrow-left"></i> Back to Documents
+</a>
+{% else %}
+<a href="{% url 'document_detail' document.pk %}"
+   class="mini-link d-inline-flex align-items-center gap-1 mb-3 text-decoration-none">
+    <i class="bi bi-arrow-left"></i> Back to Document
+</a>
+{% endif %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1">
+                    {% if is_new %}Add a new document{% else %}Edit: {{ document.title }}{% endif %}
+                </h1>
+                <p class="text-muted mb-4">Fields marked * are required.</p>
+                <form method="post" enctype="multipart/form-data" novalidate{% if is_new %} data-ocr-autofill="1"{% endif %}>
+                    {% csrf_token %}
+                    {% if ocr_assisted %}<input type="hidden" name="ocr_assisted" value="1">{% endif %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if is_new %}
+                    <!-- Upload first: the same file input that becomes
+                         Document.file. RenewMate can read it (OCR) to help
+                         fill in the fields below - it is only stored when
+                         the user clicks "Add Document". -->
+                    <div class="border rounded-3 bg-body-tertiary p-3 mb-4">
+                        <h2 class="h6 mb-1"><i class="bi bi-cloud-arrow-up"></i> Upload Document</h2>
+                        <p class="text-muted small mb-3">
+                            Add a scan or photo and let RenewMate fill in the details for you.
+                            You can also type everything yourself.
+                        </p>
+                        <label for="{{ form.file.id_for_label }}" class="form-label">Document file</label>
+                        {{ form.file }}
+                        <div class="form-text">JPG, JPEG, PNG or WEBP. Maximum size: 5 MB.</div>
+                        {% for error in form.file.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                        <button type="submit" name="ocr_action" value="extract"
+                                class="btn btn-outline-primary btn-sm mt-3">
+                            <i class="bi bi-stars"></i> Extract Details
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {% if recognized %}
+                    <div class="alert alert-success d-flex gap-2" role="alert">
+                        <i class="bi {{ recognized.icon }} fs-5"></i>
+                        <div class="small">
+                            <div><strong>Document detected:</strong> {{ recognized.label }}</div>
+                            <div>Confidence: {{ recognized.confidence }}</div>
+                            {% if ocr_filename %}<div class="text-muted">File: {{ ocr_filename }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if ocr_assisted %}
+                    <div class="alert alert-warning" role="alert">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-exclamation-triangle fs-5"></i>
+                            <div class="small">
+                                <strong>Review extracted information</strong>
+                                <div>
+                                    We extracted some information from your document.
+                                    Please verify and correct the fields before adding the document.
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" name="ocr_action" value="reset" formnovalidate
+                                class="btn btn-sm btn-outline-secondary mt-2">
+                            <i class="bi bi-x-circle"></i> Start over
+                        </button>
+                    </div>
+                    {% elif ocr_status == 'no_fields' or ocr_status == 'failed' %}
+                    <div class="alert alert-info d-flex gap-2" role="alert">
+                        <i class="bi bi-info-circle fs-5"></i>
+                        <div class="small">{{ ocr_no_fields_message }}</div>
+                    </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        {% if is_new and field.name == 'file' %}
+                            {# already rendered at the top of the page #}
+                        {% else %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            {% if is_new %}Add Document{% else %}Save Changes{% endif %}
+                        </button>
+                        <a href="{% if is_new %}{% url 'document_list' %}{% else %}{% url 'document_detail' document.pk %}{% endif %}"
+                           class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

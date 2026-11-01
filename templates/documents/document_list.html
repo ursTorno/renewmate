@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load document_extras %}
+
+{% block title %}My Documents{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Documents</span>
+        <h1 class="page-title">My Documents</h1>
+        <p class="page-sub">Search, filter and manage everything you track.</p>
+    </div>
+    <a href="{% url 'document_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Document
+    </a>
+</div>
+
+<!-- Groups: user-created folders. "All Documents" is the unfiltered view. -->
+<div class="card group-strip mb-3">
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="eyebrow me-1">Groups</span>
+            <a href="{% url 'document_list' %}"
+               class="group-chip{% if not current_group %} active{% endif %}">
+                <i class="bi bi-collection"></i> All Documents
+            </a>
+            {% for group in groups %}
+                <a href="{% url 'group_detail' group.pk %}"
+                   class="group-chip{% if current_group and current_group.pk == group.pk %} active{% endif %}">
+                    <i class="bi bi-folder"></i> {{ group.name }}
+                    <span class="group-count">{{ group.document_count }}</span>
+                </a>
+            {% endfor %}
+            <span class="ms-auto d-flex gap-2">
+                <a href="{% url 'group_create' %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-folder-plus"></i> New Group
+                </a>
+                <a href="{% url 'group_list' %}" class="btn btn-sm btn-outline-secondary">
+                    Manage groups
+                </a>
+            </span>
+        </div>
+    </div>
+</div>
+
+{% if current_group %}
+<div class="group-banner mb-4">
+    <div>
+        <span class="eyebrow">Group</span>
+        <h2 class="h5 mb-0"><i class="bi bi-folder"></i> {{ current_group.name }}</h2>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <a href="{% url 'group_add_documents' current_group.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Existing Documents
+        </a>
+        <a href="{% url 'document_list' %}"
+           class="mini-link d-inline-flex align-items-center gap-1 text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Back to Documents
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Search + filters (a simple GET form) -->
+<form method="get" class="card filter-bar mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label for="q" class="form-label">Search</label>
+                <input type="text" id="q" name="q" value="{{ query }}"
+                       class="form-control" placeholder="Title, number or authority...">
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="kind" class="form-label">Type</label>
+                <select id="kind" name="kind" class="form-select">
+                    <option value="">All types</option>
+                    {% for value, label in kind_choices %}
+                        <option value="{{ value }}" {% if kind_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="">All statuses</option>
+                    <option value="valid" {% if status_filter == 'valid' %}selected{% endif %}>Active</option>
+                    <option value="expiring" {% if status_filter == 'expiring' %}selected{% endif %}>Expiring Soon</option>
+                    <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                <a href="{% if current_group %}{% url 'group_detail' current_group.pk %}{% else %}{% url 'document_list' %}{% endif %}"
+                   class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if documents %}
+<div class="row g-4">
+    {% for document in documents %}
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card document-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="doc-kind-icon"><i class="bi {% kind_icon document.kind %}"></i></span>
+                        <span class="status-pill status-{{ document.status }}">{{ document.status }}</span>
+                    </div>
+                    <h2 class="doc-name">{{ document.title }}</h2>
+                    <p class="kind-line">{{ document.get_kind_display }}</p>
+                    {% if document.group %}
+                        <p class="group-line">
+                            <a href="{% url 'group_detail' document.group.pk %}">
+                                <i class="bi bi-folder"></i> {{ document.group.name }}
+                            </a>
+                        </p>
+                    {% endif %}
+                    <div class="doc-meta">
+                        <div class="doc-meta-row">
+                            <span class="k">Expiry</span>
+                            <span class="v">{{ document.expiry_date|date:"d M Y"|default:"-" }}</span>
+                        </div>
+                        <div class="doc-meta-row">
+                            <span class="k">Status</span>
+                            <span class="v">{{ document.get_days_text }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'document_detail' document.pk %}" class="details-link">
+                        View details <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-box">
+    <i class="bi bi-inbox"></i>
+    <p class="mt-2 mb-3">
+        {% if query or kind_filter or status_filter %}
+            No documents match your search or filters.
+        {% elif current_group %}
+            This group is empty. Add a document to it, or move one here from Edit.
+        {% else %}
+            You have no documents yet. Add your first one!
+        {% endif %}
+    </p>
+    <a href="{% url 'document_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Document
+    </a>
+</div>
+{% endif %}
+{% endblock %}

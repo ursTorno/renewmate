@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ group.name }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'group_list' %}"
+   class="mini-link d-inline-flex align-items-center gap-1 mb-3 text-decoration-none">
+    <i class="bi bi-arrow-left"></i> Back to Groups
+</a>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-body p-4 text-center">
+                <i class="bi bi-folder-x text-danger display-5"></i>
+                <h1 class="h4 mt-3">Delete the group “{{ group.name }}”?</h1>
+                <p class="text-muted mb-0">
+                    The documents in this group are <strong>not</strong> deleted.
+                    They stay in My Documents and simply become ungrouped.
+                </p>
+                <form method="post" class="d-flex gap-2 justify-content-center mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, delete the group</button>
+                    <a href="{% url 'group_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

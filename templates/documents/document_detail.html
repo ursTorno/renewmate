@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load document_extras %}
+
+{% block title %}{{ document.title }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'document_list' %}" class="mini-link d-inline-flex align-items-center gap-1 mb-3 text-decoration-none">
+    <i class="bi bi-arrow-left"></i> Back to Documents
+</a>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="detail-head">
+                    <span class="doc-kind-icon"><i class="bi {% kind_icon document.kind %}"></i></span>
+                    <div class="flex-grow-1">
+                        <h1 class="page-title">{{ document.title }}</h1>
+                        <p class="kind-line mb-0">{{ document.get_kind_display }}</p>
+                    </div>
+                    <span class="status-pill status-{{ document.status }}">{{ document.status }}</span>
+                </div>
+                <hr>
+                <dl class="row detail-list mb-0">
+                    <dt class="col-sm-4">Document number</dt>
+                    <dd class="col-sm-8">{{ document.document_number|default:"—" }}</dd>
+                    <dt class="col-sm-4">Issuing authority</dt>
+                    <dd class="col-sm-8">{{ document.issuing_authority|default:"—" }}</dd>
+                    <dt class="col-sm-4">Issue date</dt>
+                    <dd class="col-sm-8">{{ document.issue_date|date:"d M Y"|default:"—" }}</dd>
+                    <dt class="col-sm-4">Expiry date</dt>
+                    <dd class="col-sm-8">
+                        {{ document.expiry_date|date:"d M Y"|default:"—" }}
+                        <span class="doc-sub-line">· {{ document.get_days_text }}</span>
+                    </dd>
+                    <dt class="col-sm-4">Group</dt>
+                    <dd class="col-sm-8">
+                        {% if document.group %}
+                            <a href="{% url 'group_detail' document.group.pk %}">
+                                <i class="bi bi-folder me-1"></i>{{ document.group.name }}
+                            </a>
+                        {% else %}—{% endif %}
+                    </dd>
+                    <dt class="col-sm-4">Notes</dt>
+                    <dd class="col-sm-8">{{ document.notes|default:"—"|linebreaksbr }}</dd>
+                    {% if document.file %}
+                        <dt class="col-sm-4">Uploaded file</dt>
+                        <dd class="col-sm-8">
+                            <a href="{{ document.file.url }}" target="_blank">
+                                <i class="bi bi-download me-1"></i>View / download
+                            </a>
+                        </dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body p-4 text-center">
+                <div class="eyebrow">Status</div>
+                <div class="mb-2">
+                    <span class="status-pill status-{{ document.status }}">{{ document.status }}</span>
+                </div>
+                <p class="fw-semibold mb-1">{{ document.get_days_text }}</p>
+                <p class="doc-sub-line mb-0">Expiry date: {{ document.expiry_date|date:"d M Y"|default:"—" }}</p>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2">
+            <a href="{% url 'document_renew' document.pk %}" class="btn btn-primary">
+                <i class="bi bi-arrow-repeat me-1"></i>Renew Document
+            </a>
+            <a href="{% url 'document_update' document.pk %}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil me-1"></i>Edit
+            </a>
+            <a href="{% url 'document_delete' document.pk %}" class="btn btn-outline-danger">
+                <i class="bi bi-trash me-1"></i>Delete
+            </a>
+            <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-list-ul me-1"></i>All documents
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if document.renewals.all %}
+<div class="card mt-4">
+    <div class="card-header d-flex align-items-center gap-2">
+        <span class="list-title"><i class="bi bi-clock-history"></i>Renewal History</span>
+    </div>
+    <div>
+        {% for renewal in document.renewals.all %}
+        <div class="renewal-entry">
+            <span class="doc-icon-sm"><i class="bi bi-arrow-repeat"></i></span>
+            <div class="flex-grow-1 min-w-0">
+                <div class="doc-name-line">{{ renewal.new_expiry_date|date:"d M Y" }}</div>
+                <div class="doc-sub-line">
+                    Old expiry: {{ renewal.old_expiry_date|date:"d M Y" }}
+                    → New expiry: {{ renewal.new_expiry_date|date:"d M Y" }}
+                </div>
+                <div class="doc-sub-line">
+                    Renewed on: {{ renewal.renewed_on|date:"d M Y" }}
+                    {% if renewal.notes %}· {{ renewal.notes }}{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

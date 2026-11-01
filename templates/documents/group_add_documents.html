@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Add documents to {{ group.name }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'group_detail' group.pk %}"
+   class="mini-link d-inline-flex align-items-center gap-1 mb-3 text-decoration-none">
+    <i class="bi bi-arrow-left"></i> Back to {{ group.name }}
+</a>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <span class="eyebrow">Group</span>
+                <h1 class="page-title mb-1">Add documents to {{ group.name }}</h1>
+                <p class="text-muted mb-4">
+                    Tick the documents you want to put in this group.
+                    Documents that already belong to another group keep that group —
+                    move those one at a time from Edit Document.
+                </p>
+
+                {% if available_documents %}
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <div class="form-label">{{ form.documents.label }}</div>
+                        <div class="checkbox-list">
+                            {% for checkbox in form.documents %}
+                                <label class="form-check" for="{{ checkbox.id_for_label }}">
+                                    {{ checkbox.tag }}
+                                    <span class="form-check-label">{{ checkbox.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="form-text">{{ form.documents.help_text }}</div>
+                        {% for error in form.documents.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-folder-plus me-1"></i>Add Selected
+                        </button>
+                        <a href="{% url 'group_detail' group.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+                {% else %}
+                <div class="empty-box">
+                    <i class="bi bi-folder"></i>
+                    <p class="mt-2 mb-3">No ungrouped documents available.</p>
+                    <a href="{% url 'group_detail' group.pk %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-left me-1"></i>Back to {{ group.name }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

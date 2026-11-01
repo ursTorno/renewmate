@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Django
+db.sqlite3
+staticfiles/
+
+# User uploads
+/media/*
+!media/.gitkeep
+
+# Local backup archives
+Archive.zip
+
+# Environment / OS
+.env
+.DS_Store
+
+# Local screenshots / mock assets (not referenced by the app)
+docs.png
+license_mock.png
