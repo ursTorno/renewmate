@@ -428,6 +428,7 @@ OCR_SESSION_KEYS = (
     "ocr_document_icon",
     "ocr_extracted_fields",
     "ocr_status",
+    "ocr_error_message",
 )
 
 # Pending scans live OUTSIDE MEDIA_ROOT (in the system temp folder) so they
@@ -444,8 +445,11 @@ OCR_STATUS_FAILED = "failed"
 
 # Friendly message shown when OCR could not pull structured details out.
 OCR_NO_FIELDS_MESSAGE = (
-    "We couldn't extract information from this document. "
-    "You can enter the details manually."
+    "OCR completed, but RenewMate couldn't identify supported details "
+    "in this document. You can enter the details manually."
+)
+OCR_FAILED_MESSAGE = (
+    "OCR couldn't process this image. You can enter the details manually."
 )
 
 
@@ -550,7 +554,11 @@ def _add_document_context(request, form, is_new):
         # Only a successful structured extraction shows the review alert and
         # the "already added" duplicate guard.
         "ocr_assisted": status == OCR_STATUS_REVIEW,
-        "ocr_no_fields_message": OCR_NO_FIELDS_MESSAGE,
+        "ocr_no_fields_message": (
+            request.session.get("ocr_error_message") or OCR_FAILED_MESSAGE
+            if status == OCR_STATUS_FAILED
+            else OCR_NO_FIELDS_MESSAGE
+        ),
     }
 
 
@@ -579,12 +587,13 @@ def _handle_add_document_extract(request):
 
     try:
         ocr = extract_text(uploaded)
-    except OCRError:
+    except OCRError as exc:
         # OCR failed - keep the file so the document can still be added by
         # hand with its scan attached. Manual entry is never blocked.
         _store_pending_scan(request, uploaded)
         request.session["ocr_filename"] = uploaded.name
         request.session["ocr_status"] = OCR_STATUS_FAILED
+        request.session["ocr_error_message"] = str(exc)
         return redirect("document_create")
 
     # Existing services: rule-based recognition, then field extraction.
