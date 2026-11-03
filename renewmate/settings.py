@@ -4,6 +4,7 @@
 # database, templates, static files, media uploads and login redirects.
 
 import os
+import sys
 from pathlib import Path
 
 from django.contrib.messages import constants as message_constants
@@ -34,6 +35,20 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# Render terminates HTTPS at its proxy and forwards the original scheme in
+# this header. Trust it so Django can validate HTTPS requests and CSRF origins.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = [
+    "https://{}".format(host)
+    for host in ALLOWED_HOSTS
+    if host not in {"127.0.0.1", "localhost"}
+]
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 # ---------------------------------------------------------------------------
 # Applications
 # ---------------------------------------------------------------------------
@@ -44,6 +59,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "cloudinary",
+    "cloudinary_storage",
     # RenewMate apps
     "accounts",
     "documents",
@@ -52,6 +69,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -82,11 +100,13 @@ WSGI_APPLICATION = "renewmate.wsgi.application"
 # ---------------------------------------------------------------------------
 # Database - SQLite for development (no extra setup needed)
 # ---------------------------------------------------------------------------
+import dj_database_url
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default="sqlite:///{}".format(BASE_DIR / "db.sqlite3"),
+        conn_max_age=600,
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -110,6 +130,35 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Uploaded files go to Cloudinary when credentials are configured (the
+# deployed setup) and to MEDIA_ROOT on the local disk otherwise. Without this
+# switch a local run crashes on every document file URL, because the Cloudinary
+# storage refuses to load without CLOUDINARY_URL.
+CLOUDINARY_CONFIGURED = bool(
+    os.environ.get("CLOUDINARY_URL") or os.environ.get("CLOUDINARY_CLOUD_NAME")
+)
+
+# The hashed-manifest static storage needs the staticfiles.json that
+# `collectstatic` writes. Local development (and the test suite) never runs
+# collectstatic, so those runs use plain static storage instead.
+RUNNING_TESTS = "test" in sys.argv
+STATICFILES_BACKEND = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    if not DEBUG and not RUNNING_TESTS
+    else "django.contrib.staticfiles.storage.StaticFilesStorage"
+)
+
+STORAGES = {
+    "default": {
+        "BACKEND": (
+            "cloudinary_storage.storage.MediaCloudinaryStorage"
+            if CLOUDINARY_CONFIGURED
+            else "django.core.files.storage.FileSystemStorage"
+        )
+    },
+    "staticfiles": {"BACKEND": STATICFILES_BACKEND},
+}
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"

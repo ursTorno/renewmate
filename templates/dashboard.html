@@ -4,114 +4,159 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="page-head">
-    <div>
-        <span class="eyebrow">Overview</span>
-        <h1 class="page-title">Welcome back, {{ user.username }}</h1>
-        <p class="page-sub">Here is the current state of your documents.</p>
-    </div>
-    <a href="{% url 'document_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>Add Document
-    </a>
-</div>
+<div class="dashboard-wrap">
 
-<!-- Summary cards -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="card stat-card">
-            <div class="card-body">
+    <!-- Top tab navigation -->
+    <nav class="dashboard-tabs" aria-label="Dashboard sections">
+        <a href="{% url 'dashboard' %}" class="tab active" aria-current="page">Overview</a>
+        <a href="{% url 'document_list' %}" class="tab">Documents</a>
+        <a href="{% url 'reminders' %}" class="tab">Reminders</a>
+        <a href="{% url 'profile' %}" class="tab">Settings</a>
+    </nav>
+
+    <!-- Welcome hero -->
+    <div class="dashboard-hero">
+        <div class="hero-text">
+            <h1 class="hero-title">Welcome back, {{ user.username }}</h1>
+            <p class="hero-sub">Here is the current state of your documents.</p>
+        </div>
+        <a href="{% url 'document_create' %}" class="btn-add">
+            <span class="btn-add-mark" aria-hidden="true">+</span>Add Document
+        </a>
+    </div>
+
+    <!-- Needs-attention card (dark) -->
+    {% if expiring_count or expired_count %}
+    {% with first=expiring.0 alert_total=expiring_count|add:expired_count %}
+    <section class="attention-card" aria-label="Documents that need attention">
+        <div class="attention-body">
+            <div class="attention-text">
+                <span class="attention-pill">Needs Attention</span>
+                <h2 class="attention-title">
+                    {% if expiring_count > 1 %}{{ expiring_count }} documents are expiring soon
+                    {% elif first %}Your {{ first.get_kind_display|lower }} expires soon
+                    {% else %}You have expired documents{% endif %}
+                </h2>
+                <p class="attention-desc">
+                    You have {{ expired_count }} expired and {{ expiring_count }} expiring-soon document{{ alert_total|pluralize }}.
+                    Renew {% if alert_total > 1 %}them{% else %}it{% endif %} before it is too late.
+                </p>
+                <div class="attention-actions">
+                    <a href="{% url 'document_list' %}?status={% if expiring_count %}expiring{% else %}expired{% endif %}" class="btn-renew">Renew now</a>
+                    {% if first %}
+                    <a href="{% url 'document_detail' first.pk %}" class="btn-view">View details</a>
+                    {% else %}
+                    <a href="{% url 'document_list' %}?status=expired" class="btn-view">View details</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="attention-side">
+                {% if first %}
+                <div class="days-left">
+                    <span class="days-number">{{ first.days_left }}</span>
+                    <span class="days-label">{{ first.days_left|pluralize:"Day Left,Days Left" }}</span>
+                </div>
+                <div class="doc-quick">
+                    <div class="doc-kind">{{ first.get_kind_display }}</div>
+                    <div class="doc-name">{{ first.title }}</div>
+                    <div class="doc-expires">Expires {{ first.expiry_date|date:"d M Y" }}</div>
+                </div>
+                {% else %}
+                <div class="days-left">
+                    <span class="days-number">{{ expired_count }}</span>
+                    <span class="days-label">Expired</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% endwith %}
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="stat-grid">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></div>
+            <div class="stat-info">
                 <div class="stat-number">{{ total }}</div>
                 <div class="stat-label">Total Documents</div>
             </div>
         </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card stat-card stat-valid">
-            <div class="card-body">
+        <div class="stat-card stat-green">
+            <div class="stat-icon"><i class="bi bi-check-circle-fill" aria-hidden="true"></i></div>
+            <div class="stat-info">
                 <div class="stat-number">{{ valid_count }}</div>
                 <div class="stat-label">Active</div>
             </div>
         </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card stat-card stat-expiring">
-            <div class="card-body">
+        <div class="stat-card stat-amber">
+            <div class="stat-icon"><i class="bi bi-clock" aria-hidden="true"></i></div>
+            <div class="stat-info">
                 <div class="stat-number">{{ expiring_count }}</div>
                 <div class="stat-label">Expiring Soon</div>
             </div>
         </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card stat-card stat-expired">
-            <div class="card-body">
+        <div class="stat-card stat-red">
+            <div class="stat-icon"><i class="bi bi-x-circle-fill" aria-hidden="true"></i></div>
+            <div class="stat-info">
                 <div class="stat-number">{{ expired_count }}</div>
                 <div class="stat-label">Expired</div>
             </div>
         </div>
     </div>
-</div>
 
-{% if expired_count or expiring_count %}
-<div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
-    <i class="bi bi-exclamation-triangle-fill"></i>
-    <div>
-        You have {{ expired_count }} expired and {{ expiring_count }} expiring-soon document(s).
-        Renew them before it is too late!
-    </div>
-</div>
-{% endif %}
+    <!-- Two list sections -->
+    <div class="list-grid">
 
-<div class="row g-4">
-    <!-- Expiring soon -->
-    <div class="col-lg-7">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="list-title"><i class="bi bi-bell"></i> Expiring soon</span>
-                <a href="{% url 'document_list' %}?status=expiring" class="mini-link">View all</a>
+        <!-- Expiring soon -->
+        <section class="list-section" aria-labelledby="expiring-heading">
+            <div class="section-head">
+                <h2 class="section-title" id="expiring-heading"><i class="bi bi-bell" aria-hidden="true"></i> Expiring soon</h2>
+                <a href="{% url 'document_list' %}?status=expiring" class="view-all">View all</a>
             </div>
-            <div>
+            <div class="section-body">
                 {% for document in expiring %}
-                    <div class="list-row">
-                        <span class="doc-icon-sm"><i class="bi {% kind_icon document.kind %}"></i></span>
-                        <div class="flex-grow-1 min-w-0">
-                            <a href="{% url 'document_detail' document.pk %}" class="doc-name-line d-block text-decoration-none">{{ document.title }}</a>
-                            <div class="doc-sub-line">{{ document.get_kind_display }} · {{ document.get_days_text }}</div>
-                        </div>
-                        <span class="status-pill status-{{ document.status }}">{{ document.status }}</span>
+                <div class="doc-row">
+                    <span class="doc-icon-sm"><i class="bi {% kind_icon document.kind %}" aria-hidden="true"></i></span>
+                    <div class="doc-flex">
+                        <a href="{% url 'document_detail' document.pk %}" class="doc-name text-decoration-none">{{ document.title }}</a>
+                        <div class="doc-sub">{{ document.get_kind_display }} · {{ document.get_days_text }}</div>
                     </div>
+                    <span class="status-pill status-{{ document.status }}">{{ document.status|capfirst }}</span>
+                </div>
                 {% empty %}
-                    <div class="list-row">
-                        <div class="doc-sub-line">Nothing is expiring in the next 30 days.</div>
-                    </div>
+                <div class="doc-row empty">
+                    <div class="doc-sub">Nothing is expiring in the next 30 days.</div>
+                </div>
                 {% endfor %}
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Recently added -->
-    <div class="col-lg-5">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="list-title"><i class="bi bi-clock-history"></i> Recently added</span>
-                <a href="{% url 'document_list' %}" class="mini-link">View all</a>
+        <!-- Recently added -->
+        <section class="list-section" aria-labelledby="recent-heading">
+            <div class="section-head">
+                <h2 class="section-title" id="recent-heading"><i class="bi bi-clock-history" aria-hidden="true"></i> Recently added</h2>
+                <a href="{% url 'document_list' %}" class="view-all">View all</a>
             </div>
-            <div>
+            <div class="section-body">
                 {% for document in recent %}
-                    <div class="list-row">
-                        <span class="doc-icon-sm"><i class="bi {% kind_icon document.kind %}"></i></span>
-                        <div class="flex-grow-1 min-w-0">
-                            <a href="{% url 'document_detail' document.pk %}" class="doc-name-line d-block text-decoration-none">{{ document.title }}</a>
-                            <div class="doc-sub-line">Added {{ document.created_at|date:"d M Y" }}</div>
-                        </div>
-                        <span class="status-pill status-{{ document.status }}">{{ document.status }}</span>
+                <div class="doc-row">
+                    <span class="doc-icon-sm"><i class="bi {% kind_icon document.kind %}" aria-hidden="true"></i></span>
+                    <div class="doc-flex">
+                        <a href="{% url 'document_detail' document.pk %}" class="doc-name text-decoration-none">{{ document.title }}</a>
+                        <div class="doc-sub">Added {{ document.created_at|date:"d M Y" }}</div>
                     </div>
+                    <span class="status-pill status-{{ document.status }}">{{ document.status|capfirst }}</span>
+                </div>
                 {% empty %}
-                    <div class="list-row">
-                        <div class="doc-sub-line">No documents yet. Add your first one!</div>
-                    </div>
+                <div class="doc-row empty">
+                    <div class="doc-sub">No documents yet. Add your first one!</div>
+                </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
+
     </div>
 </div>
 {% endblock %}

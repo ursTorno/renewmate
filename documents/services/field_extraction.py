@@ -538,6 +538,15 @@ _INS_POLICY_LABEL_RE = re.compile(
     r"\b(policy\s*(no\.?|number|id)|certificate\s*(no\.?|number))\b",
     re.IGNORECASE,
 )
+_INS_POLICY_VALUE_BOUNDARY_RE = re.compile(
+    r"\b(policy\s*holder|policyholder|insured\s*(name|vehicle|by)|"
+    r"name\s*of\s*insured|proposer\s*name|owner\s*name|"
+    r"(insured\s*)?vehicle\s*(no\.?|number)|registration\s*(no\.?|number)|"
+    r"make\s*(and|&)\s*model|type\s*of\s*vehicle|insurer|"
+    r"insurance\s*(company|provider|co\.?)|policy\s*(start|expiry|end|period)|"
+    r"(policy\s*)?(start|expiry|end)\s*date|idv|premium|previous\s*policy)\b",
+    re.IGNORECASE,
+)
 _INS_HOLDER_LABEL_RE = re.compile(
     r"\b(policy\s*holder|policyholder|insured\s*name|name\s*of\s*insured|"
     r"proposer\s*name|owner\s*name)\b",
@@ -581,7 +590,14 @@ def _ins_extract_policy_number(lines):
         match = _INS_POLICY_LABEL_RE.search(line)
         if not match:
             continue
-        candidate = _ins_clean_policy_number(line[match.end():])
+        value_text = line[match.end():]
+        # OCR sometimes merges both columns of an insurance table into one
+        # line. Keep the value beside its label and stop before the next field
+        # label, otherwise unrelated text makes the number look invalid.
+        boundary = _INS_POLICY_VALUE_BOUNDARY_RE.search(value_text)
+        if boundary:
+            value_text = value_text[:boundary.start()]
+        candidate = _ins_clean_policy_number(value_text)
         if candidate:
             return candidate
         # The number may sit on the next non-empty line.

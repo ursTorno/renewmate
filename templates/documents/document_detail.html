@@ -46,8 +46,8 @@
                     {% if document.file %}
                         <dt class="col-sm-4">Uploaded file</dt>
                         <dd class="col-sm-8">
-                            <a href="{{ document.file.url }}" target="_blank">
-                                <i class="bi bi-download me-1"></i>View / download
+                            <a href="{{ document.file.url }}" target="_blank" rel="noopener" class="btn btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i>View document
                             </a>
                         </dd>
                     {% endif %}
