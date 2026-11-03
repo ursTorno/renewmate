@@ -13,6 +13,9 @@ OCR_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
 
 # Reasonable upper bound so one upload cannot exhaust server memory/disk.
 OCR_MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
+OCR_MAX_IMAGE_PIXELS = 30_000_000
+OCR_MAX_OCR_SIZE = (2200, 2200)
+OCR_TIMEOUT_SECONDS = 25
 
 
 class OCRError(Exception):
@@ -77,7 +80,7 @@ def run_ocr(image):
             "Please ask the administrator to install pytesseract."
         )
     try:
-        text = _pytesseract.image_to_string(image)
+        text = _pytesseract.image_to_string(image, timeout=OCR_TIMEOUT_SECONDS)
     except Exception as exc:
         raise OCRError(
             "OCR could not process this image. Please try a clearer image."
@@ -127,15 +130,28 @@ def extract_text(uploaded_file):
 
     try:
         image = Image.open(uploaded_file)
+        width, height = image.size
+        if width * height > OCR_MAX_IMAGE_PIXELS:
+            raise OCRError(
+                "This image has too many pixels for the server to process. "
+                "Please resize it and try again."
+            )
+        # JPEG can be decoded at a reduced resolution. Do this before loading
+        # the full image, then cap every format to a manageable OCR size.
+        if image.format == "JPEG":
+            image.draft("L", OCR_MAX_OCR_SIZE)
+        image.thumbnail(OCR_MAX_OCR_SIZE, Image.Resampling.LANCZOS)
         image.load()
+    except OCRError:
+        raise
     except Exception:
         raise OCRError(
             "That file does not look like a valid image. "
             "Upload a readable JPG, JPEG, PNG or WEBP image."
         )
 
-    if image.mode not in ("RGB", "L"):
-        image = image.convert("RGB")
+    if image.mode != "L":
+        image = image.convert("L")
 
     text = run_ocr(image)
 
