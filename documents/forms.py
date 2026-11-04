@@ -2,6 +2,7 @@
 # DocumentForm turns the Document model into an HTML form with validation.
 
 from django import forms
+from django.core.validators import FileExtensionValidator
 
 from .models import Document, DocumentGroup
 
@@ -156,6 +157,25 @@ class DocumentForm(forms.ModelForm):
         # A document may always stay ungrouped ("No Group" = empty value).
         self.fields["group"].empty_label = "No Group"
         self.fields["group"].required = False
+
+        # Validate extensions on newly uploaded files, but don't revalidate an
+        # existing stored file when the user edits other fields. Some storage
+        # providers save files under extensionless generated names.
+        self._keep_existing_file = bool(
+            self.instance.pk and not self.files.get(self.add_prefix("file"))
+        )
+        if self._keep_existing_file:
+            self.fields["file"].validators = [
+                validator
+                for validator in self.fields["file"].validators
+                if not isinstance(validator, FileExtensionValidator)
+            ]
+
+    def _get_validation_exclusions(self):
+        exclusions = super()._get_validation_exclusions()
+        if self._keep_existing_file:
+            exclusions.add("file")
+        return exclusions
 
     # Validation rules run automatically when is_valid() is called.
     def clean_title(self):
