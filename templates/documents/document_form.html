@@ -93,6 +93,25 @@
                     {% for field in form %}
                         {% if is_new and field.name == 'file' %}
                             {# already rendered at the top of the page #}
+                        {% elif not is_new and field.name == 'file' %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">Document file</label>
+                            {% if document.file %}
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                    <span class="text-muted small">Current file: {{ document.file.name }}</span>
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ document.file.url }}" target="_blank" rel="noopener">
+                                        <i class="bi bi-eye"></i> View current file
+                                    </a>
+                                </div>
+                                <div class="form-text mb-2">Choose a new file only if you want to replace the current one. Leave this empty to keep it.</div>
+                            {% else %}
+                                <div class="form-text mb-2">No file is currently attached. You can add one here.</div>
+                            {% endif %}
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
                         {% else %}
                         <div class="mb-3">
                             <label for="{{ field.id_for_label }}" class="form-label">
