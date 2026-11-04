@@ -1,6 +1,31 @@
 // Small client-side helpers for RenewMate.
 
 document.addEventListener("DOMContentLoaded", function () {
+    // Let users check what they typed into login and registration passwords.
+    document.querySelectorAll("[data-password-toggle]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            var group = button.closest(".input-group");
+            var input = group && group.querySelector('input[type="password"], input[type="text"]');
+            if (!input) return;
+
+            var showPassword = input.type === "password";
+            input.type = showPassword ? "text" : "password";
+            button.setAttribute("aria-pressed", showPassword ? "true" : "false");
+            button.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+
+            var icon = button.querySelector("i");
+            if (icon) {
+                icon.classList.toggle("bi-eye", !showPassword);
+                icon.classList.toggle("bi-eye-slash", showPassword);
+            }
+
+            var accessibleText = button.querySelector(".visually-hidden");
+            if (accessibleText) {
+                accessibleText.textContent = showPassword ? "Hide password" : "Show password";
+            }
+        });
+    });
+
     // Auto-close flash messages after 5 seconds so the screen stays clean.
     var alerts = document.querySelectorAll(".alert-dismissible");
     alerts.forEach(function (alertEl) {
