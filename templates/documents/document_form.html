@@ -45,6 +45,15 @@
                         <label for="{{ form.file.id_for_label }}" class="form-label">Document file</label>
                         {{ form.file }}
                         <div class="form-text">JPG, JPEG, PNG or WEBP. Maximum size: 5 MB.</div>
+                        {% if ocr_filename %}
+                            <div class="alert alert-success d-flex align-items-start gap-2 mt-3 mb-0" role="status">
+                                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                                <div>
+                                    <strong>Scan kept for this document:</strong> {{ ocr_filename }}
+                                    <div class="small">Your browser clears the file selector after extraction, but the scan is kept with this form and will be saved with the document. You don’t need to choose it again unless you want to replace it.</div>
+                                </div>
+                            </div>
+                        {% endif %}
                         {% for error in form.file.errors %}
                             <div class="text-danger small mt-1">{{ error }}</div>
                         {% endfor %}
