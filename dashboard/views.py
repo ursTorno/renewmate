@@ -2,13 +2,15 @@
 # The dashboard summarises the user's documents and what needs attention.
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from documents.models import Document
 
 
 def home(request):
-    """Public landing page for visitors."""
+    """Show the public landing page, or send signed-in users to their dashboard."""
+    if request.user.is_authenticated:
+        return redirect("dashboard")
     return render(request, "home.html")
 
 
